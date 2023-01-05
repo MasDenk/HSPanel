@@ -1,48 +1,48 @@
-# 某塔 去除登录绑定手机号 .so 文件  自建云端！
+# A certain tower Remove the .so file of the mobile phone number bound to the login and build the cloud by yourself!
   
   
-把 宝塔官方的 .so 文件 删除：libAuth.aarch64.so libAuth.glibc-2.14.x86_64.so libAuth.loongarch64.so libAuth.x86-64.so libAuth.x86.so pluginAuth.cpython-37m-aarch64-linux-gnu.so pluginAuth.cpython-37m-i386-linux-gnu.so pluginAuth.cpython-37m-loongarch64-linux-gnu.so pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.cpython-310-aarch64-linux-gnu.so pluginAuth.so  
+Delete the official .so file of Pagoda: libAuth.aarch64.so libAuth.glibc-2.14.x86_64.so libAuth.loongarch64.so libAuth.x86-64.so libAuth.x86.so pluginAuth.cpython-37m-aarch64-linux- gnu.so pluginAuth.cpython-37m-i386-linux-gnu.so pluginAuth.cpython-37m-loongarch64-linux-gnu.so pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.cpython-310-aarch64- linux-gnu.so pluginAuth.so
   
-把下载下来的 panelPlugin.py panelSSL.py pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.so  四个文件 替换搭配 /www/server/panel/class 目录下面
+Replace the downloaded four files panelPlugin.py panelSSL.py pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.so under the /www/server/panel/class directory
   
-pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.so 因为编译了，暂时不开源，防止泛滥，如果担心安全可以关闭本GitHub项目，懂代码的大佬可以自己拖到 IDA 查看代码！  
+pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.so is not open source because it has been compiled to prevent flooding. If you are worried about safety, you can close this GitHub project. Those who know the code can drag it to IDA to view the code by themselves!
   
-# 原理
-1. panelSSL.py 第 1042 行 rtmp = public.httpPost('http://www.example.com/api'+'/GetToken',pdata)   替换成 你的伪登录token接口
-2. panelPlugin.py 第 38 行 #_check_url=__api_root_url+'/panel/get_soft_list_status'     #检测云端状态的注释掉（上传的文件已经注释掉了） 
-3. panelPlugin.py 第 1304 行 #public.run_thread(self.is_verify_unbinding,args=(get,))      #每次加载列表 会 检测账户绑定 ！（上传的文件已经注释掉了）
-### 就这么简单 没什么 东西 主要 就是 pluginAuth 文件 加密列表  加密插件（因为用不到 插件安装 都是直接上传 已经下载好的解密插件，所以这个功能就没写）  
+# principle
+1. In line 1042 of panelSSL.py, rtmp = public.httpPost('http://www.example.com/api'+'/GetToken',pdata) is replaced with your fake login token interface
+2. Line 38 of panelPlugin.py #_check_url=__api_root_url+'/panel/get_soft_list_status' #Comment out the detection of cloud status (the uploaded file has been commented out)
+3. Line 1304 of panelPlugin.py #public.run_thread(self.is_verify_unbinding,args=(get,)) #Every time the list is loaded, the account binding will be detected! (The uploaded file has been commented out)
+### It’s that simple, nothing, the main thing is the pluginAuth file, the encryption list, and the encryption plug-in (because the plug-in installation is not needed, it is directly uploaded and the decrypted plug-in has been downloaded, so this function is not written)
   
-# 部署方法
-1. 先装一个 宝塔面板 然后装好环境， 然后 创建1个站点 - 	example.com / www.example.com （必须填这个域名 用来hosts 重定向的 pluginAuth.so 列表里的 域名是这个）  
-2. example.com / www.example.com 站点 301 重定向 到  自己的域名 
-3. 创建自己域名的站点 - 绑定自己的域名 例如： domian.com / www.domian.com 导入伪静态 如下：  
+# deployment method
+1. First install a pagoda panel and then install the environment, then create a site - example.com / www.example.com (this domain name must be filled in, the domain name in the pluginAuth.so list for hosts redirection is this)
+2. The example.com / www.example.com site 301 redirects to its own domain name
+3. Create a site with your own domain name - bind your own domain name For example: domian.com / www.domian.com import pseudo-static as follows:
 ```
 if (!-d $request_filename){
-	set $rule_0 1$rule_0;
+set $rule_0 1$rule_0;
 }
 if (!-f $request_filename){
-	set $rule_0 2$rule_0;
+set $rule_0 2$rule_0;
 }
 if ($rule_0 = "21"){
-  # 列表
-	rewrite ^/(panel/get_plugin_list)$ /panel/get_plugin_list.json?s=/$1 last;
-	# 登录
-	rewrite ^/(api/GetToken)$ /api/token.json?s=/$1 last;
-	rewrite ^/(.*)$ /index.php/$1;
+   # list
+rewrite ^/(panel/get_plugin_list)$ /panel/get_plugin_list.json?s=/$1 last;
+	# Log in
+rewrite ^/(api/GetToken)$ /api/token.json?s=/$1 last;
+rewrite ^/(.*)$ /index.php/$1;
 }
 
 ```
-4. 自己域名站点下目录 创建 panel 和 api 文件 把 get_plugin_list.json文件 放到panel文件里，token.json文件 放到api文件里 然后访问 http://domian.com/panel/get_plugin_list / http://domian.com/api/GetToken 看看 能不能访问！（这两个文件在 项目 data 目录里下载 ）  
+4. Create a panel and api file in the directory under your own domain name site, put the get_plugin_list.json file in the panel file, put the token.json file in the api file, and then visit http://domian.com/panel/get_plugin_list / http:// domian.com/api/GetToken See if you can access it! (These two files are downloaded in the project data directory)
   
-5. 确保以上都操作对了，然后把 宝塔面板里 /www/server/panel/class 目录下面 官方的so 全部删除：libAuth.aarch64.so libAuth.glibc-2.14.x86_64.so libAuth.loongarch64.so libAuth.x86-64.so libAuth.x86.so pluginAuth.cpython-37m-aarch64-linux-gnu.so pluginAuth.cpython-37m-i386-linux-gnu.so pluginAuth.cpython-37m-loongarch64-linux-gnu.so pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.cpython-310-aarch64-linux-gnu.so pluginAuth.so  
+5. Make sure the above operations are correct, and then delete all the official so under the /www/server/panel/class directory in the pagoda panel: libAuth.aarch64.so libAuth.glibc-2.14.x86_64.so libAuth.loongarch64.so libAuth .x86-64.so libAuth.x86.so pluginAuth.cpython-37m-aarch64-linux-gnu.so pluginAuth.cpython-37m-i386-linux-gnu.so pluginAuth.cpython-37m-loongarch64-linux-gnu.so pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.cpython-310-aarch64-linux-gnu.so pluginAuth.so
   
-6. 然后 下载项目里的 panelPlugin.py panelSSL.py pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.so  四个文件 放进去 把 panelSSL.py 里 第 1042 行 rtmp = public.httpPost('http://www.example.com/api'+'/GetToken',pdata)   替换成 你的伪登录token接口 例如：rtmp = public.httpPost('http://www.domian.com/api'+'/GetToken',pdata)
-7. 修改 etc/hosts 指引到：  
+6. Then download the four files panelPlugin.py panelSSL.py pluginAuth.cpython-37m-x86_64-linux-gnu.so pluginAuth.so in the project and put them in line 1042 in panelSSL.py rtmp = public.httpPost('http ://www.example.com/api'+'/GetToken',pdata) is replaced by your pseudo login token interface. For example: rtmp = public.httpPost('http://www.domian.com/api'+' /GetToken',pdata)
+7. Modify the etc/hosts guide to:
 ```
-你服务器IP example.com
-你服务器IP www.example.com
+Your server IP example.com
+Your server IP www.example.com
 ```
-8. 最后重启面版就行了，然后登录面板 随便输入 手机号 密码 就可绑定账号！
+8. Finally, just restart the panel, and then log in to the panel and enter the mobile phone number and password to bind the account!
   
-### 如果想要修改到期时间，列表文件里搜索 1893513599 批量替换成 新的 Unix时间戳
+### If you want to modify the expiration time, search for 1893513599 in the list file and replace it with the new Unix timestamp in batches
